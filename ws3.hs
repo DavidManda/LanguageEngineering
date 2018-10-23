@@ -1,6 +1,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+
 data (f:+:g) a = L(f a) | R(g a)
 infixr 5 :+:
 
@@ -80,3 +81,25 @@ val x = In (L (Val x))
 add x y = In (R (L (Add x y)))
 sub x y = In (R (R (L (Sub x y))))
 mul x y = In (R (R (R (Mul x y))))
+
+newtype Depth = Depth Int
+
+instance Alg Val Depth where
+  alg (Val x) = Depth 0
+
+instance Alg Add Depth where
+  alg (Add (Depth x) (Depth y)) = Depth (1 + max x y)
+
+instance Alg Mul Depth where
+  alg (Mul (Depth x) (Depth y)) = Depth (1 + max x y)
+
+instance Alg Sub Depth where
+  alg (Sub (Depth x) (Depth y)) = Depth (1 + max x y)
+
+fromDepth :: Depth -> Int
+fromDepth (Depth x) = x
+
+evalDepth :: Expr -> Int
+evalDepth = fromDepth.cati
+
+-- (add (mul (val 3) (sub (val 2) (val 3))) ((val 2)))
